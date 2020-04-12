@@ -1,3 +1,7 @@
+#Needed for printing colored suits on windows
+from colorama import init
+init()
+
 class Card ():
     """
     Static class that handles cards. We represent cards as 32-bit integers, so
@@ -40,12 +44,12 @@ class Card ():
     }
     INT_SUIT_TO_CHAR_SUIT = 'xshxdxxxc'
 
-    # for pretty printing
+    # for pretty printing Modified from deuces to work on Windows 10 CLI, Python 3.6+
     PRETTY_SUITS = {
-        1 : u"\u2660".encode('utf-8'), # spades
-        2 : u"\u2764".encode('utf-8'), # hearts
-        4 : u"\u2666".encode('utf-8'), # diamonds
-        8 : u"\u2663".encode('utf-8') # clubs
+        1 : "♠", # spades
+        2 : "♥", # hearts
+        4 : "♦", # diamonds
+        8 : "♣" # clubs
     }
 
      # hearts and diamonds
