@@ -193,7 +193,7 @@ class Card ():
 
         r = Card.STR_RANKS[rank_int]
 
-        return " [ " +r+ " " +s+ " ] "
+        return "["+r+ " " +s+"]"
 
     @staticmethod
     def print_pretty_card(card_int):
@@ -203,6 +203,19 @@ class Card ():
         print(Card.int_to_pretty_str(card_int))
 
     @staticmethod
+    def print_pretty_flop(card_ints):
+        """
+        Expects a list of cards in integer form.
+        """
+        output = " "
+        
+        for i in range(3):
+            c = card_ints[i]
+            output += Card.int_to_pretty_str(c)
+
+        print(output)
+
+    @staticmethod
     def print_pretty_cards(card_ints):
         """
         Expects a list of cards in integer form.
@@ -210,9 +223,6 @@ class Card ():
         output = " "
         for i in range(len(card_ints)):
             c = card_ints[i]
-            if i != len(card_ints) - 1:
-                output += Card.int_to_pretty_str(c) + ","
-            else:
-                output += Card.int_to_pretty_str(c) + " "
+            output += Card.int_to_pretty_str(c)
 
         print(output)
