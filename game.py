@@ -12,16 +12,14 @@ import logging, sys
 -----------TO DO LIST-------------
 - Create coding system to track actions taken by agents to pass to agents for decision making
 - Fix all in bug.
-- Find minting bug where pot becomes larger than stacks of both players
 - Fix Game street. Right now it isn't used for anything but the enum street is updated incorrectly
 - Need a reload player stack function this way an agent can continue playing after busting.
 - Raise is currently calculated as the amount of money needed to match current bet + the amount going above current bet. It should be modified to only be amount going over current bet.
 - Game shouldn't be passed agents? game should create agents? How does this work because we don't want the agents coming in with wrong stack sizes. but we want agents to be customizable
+- Game should stop or reload once a player has bust.
 '''
 
 class Street(IntEnum):
-    #At this time I'm not really using this. The next_street method just resets everything but I
-    #don't think it's important the the program know which street we're on.
     PREFLOP = 0
     FLOP = 1
     TURN = 2
@@ -29,7 +27,7 @@ class Street(IntEnum):
     SHOWDOWN = 4
 
 class Game:
-    street = Street.PREFLOP #This is garbage for now.
+    street = Street.PREFLOP
 
     def __init__(self, agent1, agent2, BIG_BLIND = 100, SMALL_BLIND = 50, NUM_BB = 100, logging_level=logging.INFO):
         logging.basicConfig(stream=sys.stderr, level=logging_level)
@@ -69,9 +67,6 @@ class Game:
             self.board.append(self.deck.draw(5))
             self.hands.append(self.deck.draw(2))
             self.hands.append(self.deck.draw(2))
-
-            if (self.agents[0].stack + self.agents[1].stack) > 20000:
-                print(i, (self.agents[0].stack + self.agents[1].stack))
 
             #Preflop
             self.post_blinds()
@@ -116,8 +111,6 @@ class Game:
             self.reset_hand()
 
     def betting_round(self):
-        #every street brings a new betting round and so I think all we need to know is who goes first
-        #Have to find a way for the program to run when a player goes all in, the other player has to decide to call or fold.
 
         while not self.player_folded and not self.player_allin and not self.street_ended:
             self.num_street_actions+= 1
@@ -129,10 +122,6 @@ class Game:
 
     def process_action(self, action, raise_size = 0):
         logging.debug("{Player " + str(self.button) + " }")
-        #logging.debug("Commited:", self.agents[self.button].committed)
-        #logging.debug("Bet_size:", self.current_bet)
-        #logging.debug(self.street_actions)
-        #print(self.current_bet)
         difference = self.current_bet - self.agents[self.button].committed
 
         if action == Action.CALLCHECK:
