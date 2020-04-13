@@ -56,6 +56,7 @@ class Agent:
     def get_stack(self):
         return self.stack
 
+
     #This is where code needs to be inherited to allow testing of different AI's
     def get_action(self, min_raise):
         random_action = choice([Action.CALLCHECK, Action.FOLDCHECK, Action.RAISE])
