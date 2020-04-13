@@ -1,3 +1,13 @@
+from enum import IntEnum
+from random import choice
+from random import randint
+from card import Card
+
+class Action(IntEnum):
+    FOLDCHECK = 1
+    CALLCHECK = 2
+    RAISE = 3
+
 class Agent:
     #Should the agent have a copy of the blinds? Or just the game
     BIG_BLINDS = 100
@@ -6,9 +16,11 @@ class Agent:
 
     def __init__(self):
         self.stack = self.BIG_BLINDS*self.BIG_BLIND_IN_CENTS
-        self.player_name = "player" + str(self.players + 1)
+        self.player_name = "player" + str(self.players)
         self.hand = []
+        self.allin = False
         Agent.players+=1
+        self.committed = 0 #Integer than keeps track of how much is commited on this street.
 
     def add_chips(self, chips):
         #want to make sure chips is a POSITIVE and WHOLE INT. No negatives, 0s or floats.
@@ -20,7 +32,10 @@ class Agent:
             self.stack-=betsize
         elif betsize > self.stack:
             print("Player is all in")
+            self.allin = True
             betsize = self.stack
+
+        self.committed+=betsize
         return betsize
 
     #post functions return size of blind posted in the event the blind puts the user all in IE their remaining stack is less than blind amount
@@ -42,9 +57,19 @@ class Agent:
         return self.stack
 
     #This is where code needs to be inherited to allow testing of different AI's
-    def get_action(self):
-        pass
+    def get_action(self, min_raise):
+        random_action = choice([Action.CALLCHECK, Action.FOLDCHECK, Action.RAISE])
+
+        #Problem is that this doesn't take into account the minraise.
+        if self.stack < min_raise:
+            raise_size = self.stack
+            if random_action == 3:
+                self.allin = True
+        else:
+            raise_size = randint(min_raise, self.stack)
+
+        return random_action, raise_size
 
     def print_player(self):
-        print(self.player_name)
-        print("$" + str(self.stack/100))
+        print(self.player_name, "$" + str(self.stack/100))
+        Card.print_pretty_cards(self.hand)

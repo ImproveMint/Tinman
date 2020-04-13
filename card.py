@@ -208,12 +208,20 @@ class Card ():
         Expects a list of cards in integer form.
         """
         output = " "
-        
+
         for i in range(3):
             c = card_ints[i]
             output += Card.int_to_pretty_str(c)
 
         print(output)
+
+    @staticmethod
+    def print_pretty_turn(card_ints):
+        Card.print_pretty_card(card_ints[3])
+
+    @staticmethod
+    def print_pretty_river(card_ints):
+        Card.print_pretty_card(card_ints[4])
 
     @staticmethod
     def print_pretty_cards(card_ints):
