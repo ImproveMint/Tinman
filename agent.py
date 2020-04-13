@@ -31,7 +31,7 @@ class Agent:
         if betsize < self.stack:
             self.stack-=betsize
         elif betsize > self.stack:
-            print("Player is all in")
+            #print("Player is all in")
             self.allin = True
             betsize = self.stack
 
