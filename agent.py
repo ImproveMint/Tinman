@@ -27,14 +27,12 @@ class Agent:
         self.stack+=chips
 
     def bet(self, betsize):
-        #Need to make sure that betsize is less than agent's remaning stack
-        if betsize < self.stack:
-            self.stack-=betsize
-        elif betsize > self.stack:
+        if betsize > self.stack:
             #print("Player is all in")
             self.allin = True
             betsize = self.stack
 
+        self.stack-=betsize
         self.committed+=betsize
         return betsize
 

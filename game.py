@@ -4,25 +4,22 @@ from deck import Deck
 from evaluator import Evaluator
 from agent import Agent
 from agent import Action
-from time import sleep
+from time import sleep, time
 from enum import IntEnum
 import logging, sys
 
 '''
 -----------TO DO LIST-------------
 - Create coding system to track actions taken by agents to pass to agents for decision making
-- Add for loop to play x hands
 - Fix all in bug.
-- Find minting bug where pot becomes larger than stacks of both players
 - Fix Game street. Right now it isn't used for anything but the enum street is updated incorrectly
 - Need a reload player stack function this way an agent can continue playing after busting.
 - Raise is currently calculated as the amount of money needed to match current bet + the amount going above current bet. It should be modified to only be amount going over current bet.
 - Game shouldn't be passed agents? game should create agents? How does this work because we don't want the agents coming in with wrong stack sizes. but we want agents to be customizable
+- Game should stop or reload once a player has bust.
 '''
 
 class Street(IntEnum):
-    #At this time I'm not really using this. The next_street method just resets everything but I
-    #don't think it's important the the program know which street we're on.
     PREFLOP = 0
     FLOP = 1
     TURN = 2
@@ -30,12 +27,12 @@ class Street(IntEnum):
     SHOWDOWN = 4
 
 class Game:
-    street = Street.PREFLOP #This is garbage for now.
+    street = Street.PREFLOP
 
-    def __init__(self, agent1, agent2, BIG_BLIND = 100, SMALL_BLIND = 50, NUM_BB = 100, logging_level=logging.DEBUG):
+    def __init__(self, agent1, agent2, BIG_BLIND = 100, SMALL_BLIND = 50, NUM_BB = 100, logging_level=logging.INFO):
         logging.basicConfig(stream=sys.stderr, level=logging_level)
 
-        self.NUM_HANDS = 3
+        self.NUM_HANDS = 100000
         self.agents = [agent1, agent2]
 
         self.button = choice([0, 1]) #randomly chooses player that is first to act IE who is button and small blind
@@ -64,6 +61,8 @@ class Game:
 
     def start(self):
         for i in range(self.NUM_HANDS):
+
+            self.button = self.started_hand
             self.deck.shuffle()
             self.board.append(self.deck.draw(5))
             self.hands.append(self.deck.draw(2))
@@ -83,6 +82,7 @@ class Game:
             #Flop
             if not self.player_folded and Game.street == Street.FLOP:
                 logging.debug("-------------Flop-------------")
+                logging.debug("POT: " + str(self.pot/100))
                 if logging.root.level == logging.DEBUG:
                     Card.print_pretty_flop(self.board[0])
                 self.betting_round()
@@ -90,6 +90,7 @@ class Game:
             #Turn
             if not self.player_folded and Game.street == Street.TURN:
                 logging.debug("-------------Turn-------------")
+                logging.debug("POT: " + str(self.pot/100))
                 if logging.root.level == logging.DEBUG:
                     Card.print_pretty_turn(self.board[0])
                 self.betting_round()
@@ -97,6 +98,7 @@ class Game:
             #River
             if not self.player_folded and Game.street == Street.RIVER:
                 logging.debug("-------------River-------------")
+                logging.debug("POT: " + str(self.pot/100))
                 if logging.root.level == logging.DEBUG:
                     Card.print_pretty_river(self.board[0])
                 self.betting_round()
@@ -106,12 +108,9 @@ class Game:
                 logging.debug("-------------Showdown-------------")
                 self.showdown()
 
-            #print("Hand Reset: ", i)
             self.reset_hand()
 
     def betting_round(self):
-        #every street brings a new betting round and so I think all we need to know is who goes first
-        #Have to find a way for the program to run when a player goes all in, the other player has to decide to call or fold.
 
         while not self.player_folded and not self.player_allin and not self.street_ended:
             self.num_street_actions+= 1
@@ -123,9 +122,6 @@ class Game:
 
     def process_action(self, action, raise_size = 0):
         logging.debug("{Player " + str(self.button) + " }")
-        #logging.debug("Commited:", self.agents[self.button].committed)
-        #logging.debug("Bet_size:", self.current_bet)
-        #logging.debug(self.street_actions)
         difference = self.current_bet - self.agents[self.button].committed
 
         if action == Action.CALLCHECK:
@@ -134,10 +130,11 @@ class Game:
                 if self.num_street_actions > 1:
                     self.next_street()
             else:
+                #Need to check if agent can afford call
                 logging.debug("Calls $" + str(difference/100))
+                bet = self.agents[self.button].bet(difference)
+                self.pot+=bet
                 if self.num_street_actions > 1:
-                    self.agents[self.button].bet(difference)
-                    self.pot+=difference
                     self.next_street()
 
         elif action == Action.FOLDCHECK:
@@ -155,7 +152,7 @@ class Game:
             self.pot+=raise_size
             self.min_raise = raise_size - self.last_bet
             self.last_bet = raise_size
-            self.current_bet = self.agents[self.button].committed + self.agents[self.button].bet(raise_size)
+            self.current_bet = self.agents[self.button].committed
         else:
             logging.debug("Something is wrong at process_action")
 
@@ -170,6 +167,7 @@ class Game:
         self.street_ended = False
         self.player_allin = False
         self.player_folded = False
+        self.started_hand = (self.started_hand+1)%2
 
     def next_street(self):
         for agent in self.agents:
@@ -203,10 +201,9 @@ class Game:
         #Agent1 (seat2) won the pot
         elif handRank1 < handRank0:
             logging.debug(self.agents[1].player_name + " wins a pot of $ " + str(self.pot/100))
-            print(self.pot)
             self.agents[1].add_chips(self.pot)
 
-        #Split pot. I realize there's a rounding error here - I don't care at this time
+        #Split pot. I realize there may be a rounding error here - I don't care at this time
         elif handRank0 == handRank1:
             logging.debug("Splitpot")
             self.agents[0].add_chips(self.pot/2)
@@ -218,5 +215,7 @@ class Game:
         self.pot = 0
 
 if __name__ == "__main__":
+    start_time = time()
     game = Game(Agent(), Agent())
     game.start()
+    print("--- %s seconds ---" % (time() - start_time))
