@@ -2,7 +2,7 @@ from random import choice
 #from deuces import Deck, Evaluator, Card
 from card import Card
 from deck import Deck
-from evaluator import Evaluator 
+from evaluator import Evaluator
 from agent import Agent
 from time import sleep
 
@@ -54,7 +54,7 @@ class Game:
         #modify game state as necessary then get next player's action
         self.agents[(self.button+1)%2].get_action()
 
-        #The assumption which I'm pretty sure is fact but I'm very tired. Actions are always in pairs. The number of actions will always be in multiples of 2.
+        #The assumption which I'm pretty sure is fact but I'm very tired Actions are always in pairs. The number of actions will always be in multiples of 2.
 
     def post_blinds(self):
         self.pot += self.agents[self.button].post_small(Game.SMALL_BLIND)
