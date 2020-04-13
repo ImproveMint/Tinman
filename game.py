@@ -8,6 +8,16 @@ from time import sleep
 from enum import IntEnum
 import logging, sys
 
+'''
+-----------TO DO LIST-------------
+- Create coding system to track actions taken by agents to pass to agents for decision making
+- Add for loop to play x hands
+- Fix all in bug.
+- Find minting bug where pot becomes larger than stacks of both players
+- Fix Game street. Right now it isn't used for anything but the enum street is updated incorrectly
+- Need a reload player stack function this way an agent can continue playing after busting.
+'''
+
 class Street(IntEnum):
     #At this time I'm not really using this. The next_street method just resets everything but I
     #don't think it's important the the program know which street we're on.
@@ -56,27 +66,31 @@ class Game:
         self.post_blinds()
         self.agents[0].dealHand(self.hands[0])
         self.agents[1].dealHand(self.hands[1])
-        self.agents[0].print_player()
-        self.agents[1].print_player()
+        if logging.root.level == logging.DEBUG:
+            self.agents[0].print_player()
+            self.agents[1].print_player()
         self.betting_round()
         self.button = (self.button+1)%2 #After preflop the first to act changes. Also after this hand this agent will be first to act next hand so no need to change it again.
 
         #Flop
         if not self.player_folded:
             logging.debug("-------------Flop-------------")
-            Card.print_pretty_flop(self.board[0])
+            if logging.root.level == logging.DEBUG:
+                Card.print_pretty_flop(self.board[0])
             self.betting_round()
 
         #Turn
         if not self.player_folded:
             logging.debug("-------------Turn-------------")
-            Card.print_pretty_turn(self.board[0])
+            if logging.root.level == logging.DEBUG:
+                Card.print_pretty_turn(self.board[0])
             self.betting_round()
 
         #River
         if not self.player_folded:
             logging.debug("-------------River-------------")
-            Card.print_pretty_river(self.board[0])
+            if logging.root.level == logging.DEBUG:
+                Card.print_pretty_river(self.board[0])
             self.betting_round()
 
         #Showdown
