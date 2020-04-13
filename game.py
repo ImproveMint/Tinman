@@ -69,14 +69,14 @@ class Game:
             self.hands.append(self.deck.draw(2))
 
             #Preflop
-            self.post_blinds()
+            self.__post_blinds()
             self.agents[0].dealHand(self.hands[0])
             self.agents[1].dealHand(self.hands[1])
 
             if logging.root.level == logging.DEBUG:
                 self.agents[0].print_player()
                 self.agents[1].print_player()
-            self.betting_round()
+            self.__betting_round()
             self.button = (self.button+1)%2 #After preflop the first to act changes. Also after this hand this agent will be first to act next hand so no need to change it again.
 
             #Flop
@@ -85,7 +85,7 @@ class Game:
                 logging.debug("POT: " + str(self.pot/100))
                 if logging.root.level == logging.DEBUG:
                     Card.print_pretty_flop(self.board[0])
-                self.betting_round()
+                self.__betting_round()
 
             #Turn
             if not self.player_folded and Game.street == Street.TURN:
@@ -93,7 +93,7 @@ class Game:
                 logging.debug("POT: " + str(self.pot/100))
                 if logging.root.level == logging.DEBUG:
                     Card.print_pretty_turn(self.board[0])
-                self.betting_round()
+                self.__betting_round()
 
             #River
             if not self.player_folded and Game.street == Street.RIVER:
@@ -101,26 +101,26 @@ class Game:
                 logging.debug("POT: " + str(self.pot/100))
                 if logging.root.level == logging.DEBUG:
                     Card.print_pretty_river(self.board[0])
-                self.betting_round()
+                self.__betting_round()
 
             #Showdown
             if not self.player_folded and Game.street == Street.SHOWDOWN:
                 logging.debug("-------------Showdown-------------")
-                self.showdown()
+                self.__showdown()
 
-            self.reset_hand()
+            self.__reset_hand()
 
-    def betting_round(self):
+    def __betting_round(self):
 
         while not self.player_folded and not self.player_allin and not self.street_ended:
             self.num_street_actions+= 1
             action, raise_size = self.agents[self.button].get_action(self.current_bet)
-            self.process_action(action, raise_size)
+            self.__process_action(action, raise_size)
             self.button = (self.button+1)%2
 
         self.street_ended = False;
 
-    def process_action(self, action, raise_size = 0):
+    def __process_action(self, action, raise_size = 0):
         logging.debug("{Player " + str(self.button) + " }")
         difference = self.current_bet - self.agents[self.button].committed
 
@@ -128,23 +128,23 @@ class Game:
             if difference == 0:
                 logging.debug("Checks")
                 if self.num_street_actions > 1:
-                    self.next_street()
+                    self.__next_street()
             else:
                 #Need to check if agent can afford call
                 logging.debug("Calls $" + str(difference/100))
                 bet = self.agents[self.button].bet(difference)
                 self.pot+=bet
                 if self.num_street_actions > 1:
-                    self.next_street()
+                    self.__next_street()
 
         elif action == Action.FOLDCHECK:
             if difference == 0:
                 logging.debug("Checks")
                 if self.num_street_actions > 1:
-                    self.next_street()
+                    self.__next_street()
             else:
                 logging.debug("Folds")
-                self.process_fold()
+                self.__process_fold()
 
         elif action == Action.RAISE:
             logging.debug("Raises $" + str(raise_size/100))
@@ -156,20 +156,20 @@ class Game:
         else:
             logging.debug("Something is wrong at process_action")
 
-    def process_fold(self):
+    def __process_fold(self):
         self.player_folded = True
         self.agents[(self.button+1)%2].add_chips(self.pot)
 
-    def reset_hand(self):
+    def __reset_hand(self):
         self.pot = 0
-        self.next_street()#This resets most parameters except street so we do that next
+        self.__next_street()#This resets most parameters except street so we do that next
         Game.street = Street.PREFLOP
         self.street_ended = False
         self.player_allin = False
         self.player_folded = False
         self.started_hand = (self.started_hand+1)%2
 
-    def next_street(self):
+    def __next_street(self):
         for agent in self.agents:
             agent.committed = 0
 
@@ -180,7 +180,7 @@ class Game:
         self.street_ended = True
         Game.street = Street((int(self.street) + 1) % 5)
 
-    def post_blinds(self):
+    def __post_blinds(self):
         self.pot += self.agents[self.button].post_small(self.SMALL_BLIND)
         logging.debug("Player " + str(self.button) +  " posted small blind.")
         self.pot += self.agents[(self.button+1)%2].post_big(self.BIG_BLIND)
@@ -188,7 +188,7 @@ class Game:
         self.current_bet = self.BIG_BLIND
         self.last_bet = self.BIG_BLIND
 
-    def showdown(self):
+    def __showdown(self):
         handRank0 = self.evaluator.evaluate(self.board[0], self.hands[0])
         handRank1 = self.evaluator.evaluate(self.board[0], self.hands[1])
 
