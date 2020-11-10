@@ -3,7 +3,7 @@ The PlayerManager class keeps track of who's turn it is to act aswell
 as positioning and moving of blinds
 
 PlayerManager might be a misnomer? Can't think of a better name but I'm
-just thinking that playermanager doesn't like manager players money or actions
+just thinking that playermanager doesn't like manage player's money or actions
 just who goes when and who's in which position
 '''
 from random import randrange
@@ -74,8 +74,9 @@ class PlayerManager():
         return self.players[(self.__button_index + HU_correction + 2)%len(self.players)]
 
     '''
-    Poker positioning changes slightly when there are 2 players (Heads up) remaining This
-    calculates the necessary correction
+    Poker positioning changes slightly when there are 2 players (Heads up) remaining. This
+    calculates the necessary correction so that other methods function regardless of the
+    number of players 
     '''
     def __HU_correction(self):
         HU_correction = 0
