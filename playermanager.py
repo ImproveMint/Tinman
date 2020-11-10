@@ -7,7 +7,7 @@ just thinking that playermanager doesn't like manage player's money or actions
 just who goes when and who's in which position
 '''
 from random import randrange
-from street import Street
+from constant import Street
 
 class PlayerManager():
     def __init__(self, players):
@@ -76,7 +76,7 @@ class PlayerManager():
     '''
     Poker positioning changes slightly when there are 2 players (Heads up) remaining. This
     calculates the necessary correction so that other methods function regardless of the
-    number of players 
+    number of players
     '''
     def __HU_correction(self):
         HU_correction = 0
