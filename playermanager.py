@@ -7,7 +7,7 @@ just thinking that playermanager doesn't like manage player's money or actions
 just who goes when and who's in which position
 '''
 from random import randrange
-from constant import Street
+from constants import Street
 
 class PlayerManager():
     def __init__(self, players):
