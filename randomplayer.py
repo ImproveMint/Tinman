@@ -9,15 +9,20 @@ class randomplayer(Player):
         betsize = 0
 
         if action == Action.CALL:
-            betsize = Player.max_committed - self.committed
+            betsize = Player.street_max_committed - self.street_committed
 
-            if Player.min_raise > self.get_stack():
+            if betsize > self.get_stack():
                 betsize = self.get_stack()
 
         elif action == Action.BET_RAISE:
-            if Player.min_raise > self.get_stack():
+            if self.min_bet() >= self.get_stack():
                 betsize = self.get_stack()
             else:
-                betsize = randrange(Player.min_raise, self.get_stack())
+                betsize = randrange(self.min_bet(), self.get_stack())
+
+        if betsize == 0:
+            action = Action.CHECK_FOLD
+
+        assert(betsize > 0 or action == Action.CHECK_FOLD)
 
         return action, betsize

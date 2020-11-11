@@ -1,16 +1,10 @@
-from enum import IntEnum
-from random import choice, randint, random
 from card import Card
 
-class Action(IntEnum):
-    FOLDCHECK = 1
-    CALL = 2
-    RAISE = 3
-
 class Player:
-    max_committed = 0
-    min_raise = 0 #this is the minimum amount you can bet ABOVE the max_committed
+    street_max_committed = 0
+    hand_max_committed = 0
     big_blind = 0
+    min_raise = 0
 
     def __init__(self, name, stack):
         self.stack = stack
@@ -18,64 +12,112 @@ class Player:
         self.hand = []
         self.allin = False
         self.dead = False
-        self.committed = 0 #Integer than keeps track of how much is committed on this street.
+        self.hand_committed = 0 #I realize I need 2 separate commit variables. for the street to calculate min raises and another for payouts
+        self.street_committed = 0 #Integer than keeps track of how much is committed on this street.
         self.folded = False
 
     def add_chips(self, chips):
-        #want to make sure chips is a POSITIVE and WHOLE INT. No negatives, 0s or floats.
+        assert(chips > 0)
         self.stack+=chips
         self.allin = False;
 
-    def reset(self):
+    '''
+    Resets player parameters that must be reset every hand
+    '''
+    def __reset_player_state(self):
         self.folded = False
         self.allin = False
+        self.__reset_hand_committed()
+        self.reset_street_committed()
 
-    def reset_committed(self):
-        self.committed = 0
-        Player.max_committed = 0
+    '''
+    This resets the committed amounts for the hand shouldn't ever have to call
+    it directly as we have a reset function that must be called between hands
+    '''
+    def __reset_hand_committed(self):
+        self.hand_committed = 0
+        Player.hand_max_committed = 0
+
+    def reset_street_committed(self):
+        self.street_committed = 0
+        Player.street_max_committed = 0
         Player.min_raise = 0
 
-    def bet(self, betsize):
-        if betsize >= self.stack:
+    def bet(self, bet_size):
+        assert(bet_size > 0)
+        assert(not self.folded)
+
+        if bet_size >= self.stack:
             self.allin = True
-            betsize = self.stack
+            bet_size = self.stack
 
-        self.stack-=betsize
-        self.committed+=betsize
+        self.stack-=bet_size
+        self.hand_committed+=bet_size
+        self.street_committed+=bet_size
 
-        #this keeps track of the largest bet committed as well as min raise sizing
-        if self.committed > Player.max_committed:
-            difference = self.committed - Player.max_committed
+        self.__calculate_min_raise()
 
-            if difference > Player.big_blind:
-                Player.min_raise = difference
+        assert(self.hand_committed > 0)
+        assert(self.street_committed > 0)
+        assert(Player.min_raise > 0)
 
-            else:
-                Player.min_raise = Player.big_blind#Little nervous about this might produce errors
+        return bet_size
 
-            Player.max_committed = self.committed
+    def min_bet(self):
+        #amount needed to match the top bet
+        amount_to_match = Player.street_max_committed - self.street_committed
 
-        return betsize
+        #min amount needed to bet
+        return amount_to_match + Player.min_raise
 
-    #Hate this function name it's not indicative, all it does is gives the agent their 2 hole cards
-    def deal_hand(self, hand, big_blind):
+    def __calculate_min_raise(self):
+
+        if self.street_committed > Player.street_max_committed:
+            delta = (self.street_committed - Player.street_max_committed)
+
+            if delta > Player.min_raise:
+                Player.min_raise = delta #This is the minimum amount over the last bet you must raise
+
+            Player.street_max_committed = self.street_committed
+
+        if Player.min_raise < self.big_blind:
+            Player.min_raise = self.big_blind
+
+    '''
+    Deal's player a new hand. At the same time it calls appropriate reset function
+    to reset the necessary player parameters
+    '''
+    def deal_new_hand(self, hand, big_blind):
         Player.big_blind = big_blind
         self.hand = hand
+        self.__reset_player_state()
 
     #This returns the agents hand mostly for testing and visual simulations
     def get_hand(self):
         return self.hand
 
     def remove_from_committed(self, amount):
-        if amount >= self.committed:
-            removed = self.committed
-            self.committed = 0
-            return removed
+
+        remove = 0
+
+        if amount >= self.hand_committed:
+            removed = self.hand_committed
+            self.hand_committed = 0
+
         else:
             removed = amount
-            self.committed -= amount
+            self.hand_committed -= amount
+
+        assert(removed >= 0)
 
         return removed
+
+    '''
+    Checks if this player has the option to check IE, they've matched the highest
+    bet. If not then player folds
+    '''
+    def can_check(self):
+        return self.street_committed == Player.street_max_committed
 
     def get_stack(self):
         return self.stack
@@ -99,7 +141,7 @@ class Player:
 
     #This is kind of suss, I'm going to make it sort by amount committed to make my payout function work well
     def __eq__(self, other):
-        return self.committed == other.committed
+        return self.hand_committed == other.hand_committed
 
     def __lt__(self, other):
-        return self.committed < other.committed #This may be the wrong inequality
+        return self.hand_committed < other.hand_committed #This may be the wrong inequality

@@ -18,10 +18,14 @@ class PlayerManager():
         self.street = None
 
     def move_button(self):
+        self.street = Street.PREFLOP
         self.__button_index = (self.__button_index + 1)%len(self.players)
 
     '''
-    This returns the player who is first to act on a given street
+    This returns the player who is first to act on a given street, it also
+    indicates to the class which street it is, what sucks about this function
+    is that after for subsequent calls you must call next_player() maybe there's
+    a way to combine them
     '''
     def first_to_act(self, street):
         self.street = street
@@ -39,7 +43,12 @@ class PlayerManager():
 
     def __first_to_act_postflop(self):
         index = (self.__button_index + 1)%len(self.players)
+
+        while (self.players[index].folded or self.players[index].allin):
+            index = (index + 1)%len(self.players)
+
         self.__acting_player_index = index
+
         return self.players[index]
 
     '''
@@ -48,8 +57,18 @@ class PlayerManager():
     is changed which affects this method. That may work but seems prone to errors
     '''
     def next_player(self):
-        self.__acting_player_index = (self.__acting_player_index + 1)%len(self.players)
-        return self.players[self.__acting_player_index]
+
+        index = (self.__acting_player_index + 1)%len(self.players)
+        count = 0 #count is just to prevent an infinite loop when a player goes all in and the rest fold
+
+        #Checks that our next player is not folded and not all in
+        while (self.players[index].folded or self.players[index].allin) and count < len(self.players):
+            index = (index + 1)%len(self.players)
+            count+=1
+
+        self.__acting_player_index = index # Store index so that we can iterate from this index next call
+
+        return self.players[index]
 
     '''
     Returns player in the Button position
