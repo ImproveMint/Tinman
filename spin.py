@@ -1,9 +1,6 @@
-from random import choice
 from card import Card
 from deck import Deck
 from evaluator import Evaluator
-from time import sleep, time
-from enum import IntEnum
 from pot import Pot
 import logging, sys
 from player import Player
@@ -72,7 +69,7 @@ class Spin():
             self.pot.payout(self.players, self.board)
             self.remove_eliminated_players()
 
-        return self.players[0]
+        return self.players[0] #This is the winning player
 
     def remove_eliminated_players(self):
         before = len(self.players)

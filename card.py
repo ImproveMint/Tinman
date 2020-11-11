@@ -82,6 +82,7 @@ class Card ():
         return Card.STR_RANKS[rank_int] + Card.INT_SUIT_TO_CHAR_SUIT[suit_int]
 
     @staticmethod
+    #2 is mapped to 0 and A to 12
     def get_rank_int(card_int):
         return (card_int >> 8) & 0xF
 
@@ -119,6 +120,15 @@ class Card ():
             product *= (c & 0xFF)
 
         return product
+
+    @staticmethod
+    def is_suited(card_ints):
+        if len(card_ints) != 2:
+            return False
+        elif Card.get_suit_int(card_ints[0]) == Card.get_suit_int(card_ints[1]):
+            return True
+        else:
+            return False
 
     @staticmethod
     def prime_product_from_rankbits(rankbits):
