@@ -18,6 +18,7 @@ class Player:
 
     def add_chips(self, chips):
         assert(chips > 0)
+        assert(not self.folded)
         self.stack+=chips
         self.allin = False;
 
@@ -92,10 +93,6 @@ class Player:
         self.hand = hand
         self.__reset_player_state()
 
-    #This returns the agents hand mostly for testing and visual simulations
-    def get_hand(self):
-        return self.hand
-
     def remove_from_committed(self, amount):
 
         remove = 0
@@ -119,11 +116,15 @@ class Player:
     def can_check(self):
         return self.street_committed == Player.street_max_committed
 
-    def get_stack(self):
-        return self.stack
+    #This returns the agents starting hand
+    def get_hand(self):
+        return self.hand
 
     def get_name(self):
         return self.name
+
+    def get_stack(self):
+        return self.stack
 
     #Abstract method
     def get_action(self, gamestate):
@@ -134,10 +135,10 @@ class Player:
         Card.print_pretty_cards(self.hand)
 
     def __str__(self):
-        return (self.get_name() + " $" + str(self.get_stack()))
+        return (self.get_name() + " chips (" + str(self.get_stack()) + ")")
 
     def __repr__(self):
-        return (self.get_name() + " $" + str(self.get_stack()))
+        return (self.get_name() + " chips (" + str(self.get_stack()) + ")")
 
     #This is kind of suss, I'm going to make it sort by amount committed to make my payout function work well
     def __eq__(self, other):
