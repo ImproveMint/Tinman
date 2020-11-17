@@ -22,9 +22,9 @@ class Spin():
         self.blind_structure = blind_structure
         self.hands_per_level = hands_per_level
 
-        self.players = [randomplayer("A", self.starting_stack),
-                        randomplayer("B", self.starting_stack),
-                        randomplayer("C", self.starting_stack)]
+        self.players = [randomplayer("Alice", self.starting_stack),
+                        randomplayer("Bob", self.starting_stack),
+                        randomplayer("Chris", self.starting_stack)]
 
         self.pm = PlayerManager(self.players)
 
@@ -46,15 +46,20 @@ class Spin():
         self.players_in_hand = 0
 
     def start(self):
+
         #Play until there is only one player remaining IE 1 player has all the chips
         while len(self.players) > 1:
             #new hand
             self.__prepare_new_hand()
 
+            if logging.root.level == logging.DEBUG:
+                for i, player in enumerate(self.players):
+                    logging.debug(f"Seat {i+1}: {player.get_name()} ({player.get_stack()} in chips)")
+
             #PREFLOP
             self.__deal_new_hand()
             self.__post_blinds()#in a real game players post blinds first, it's a small formality that doesn't matter here
-            self.__betting_round()
+            self.__betting_round()#There's a bug that occurs here for some reason a player is folded and makes a bet (Bug is very unlikely 1/20000 games just to give an idea)
 
             #FLOP
             self.__betting_round()
@@ -72,10 +77,7 @@ class Spin():
         return self.players[0] #This is the winning player
 
     def remove_eliminated_players(self):
-        before = len(self.players)
         self.players[:] = [x for x in self.players if x.get_stack() > 0]
-        after = len(self.players)
-        logging.debug(f"{before-after} players removed from game.")
 
     '''
     This method resets all variables to be able to start a new hand and does
@@ -89,7 +91,7 @@ class Spin():
 
         self.pm.move_button()
 
-        logging.debug(f"----------Hand #{self.num_hands}-------------")
+        logging.debug(f"*** Hand #{self.num_hands} ***")
 
         if self.num_hands%self.hands_per_level == 0:
             self.__increase_blinds()
@@ -116,9 +118,9 @@ class Spin():
 
     def __post_blinds(self):
         self.pot.add_to_pot(self.pm.get_small_blind(), self.SMALL_BLIND)
-        logging.debug(f"Player {self.pm.get_small_blind().get_name()} posted ${self.SMALL_BLIND} small blind.")
+        logging.debug(f"{self.pm.get_small_blind().get_name()}: posts small blind {self.SMALL_BLIND}")
         self.pot.add_to_pot(self.pm.get_big_blind(), self.BIG_BLIND)
-        logging.debug(f"Player {self.pm.get_big_blind().get_name()} posted ${self.BIG_BLIND} as big blind.")
+        logging.debug(f"{self.pm.get_big_blind().get_name()}: posts big blind {self.BIG_BLIND}")
 
     def __increase_blinds(self):
         logging.debug(f"Blind level: {self.blind_level}")
@@ -128,6 +130,21 @@ class Spin():
         logging.debug("Blinds went up")
 
     def __betting_round(self):
+
+        if self.street == Street.PREFLOP:
+            logging.debug(f"*** HOLE CARDS ***")
+        elif self.street == Street.FLOP:
+            logging.debug(f"*** FLOP ***")
+        elif self.street == Street.TURN:
+            logging.debug(f"*** TURN ***")
+        elif self.street == Street.RIVER:
+            logging.debug(f"*** RIVER *** {Card.print_pretty_cards(self.board[0])}")
+
+        if logging.root.level == logging.DEBUG:
+            for player in self.players:
+                logging.debug(f"Dealt to {player.get_name()} {Card.print_pretty_cards(player.get_hand())}")
+
+
         #keeps track of how many player actions were taken, it's used to ensure
         #that everyone gets at least 1 chance to act. Otherwise preflop when
         #everyone just calls the big blind doesn't get option to bet
@@ -179,7 +196,6 @@ class Spin():
 
     def __next_street(self):
         self.street = (self.street +1)
-        logging.debug(Street(self.street))
 
     def __process_action(self, player, action, bet_size = 0):
         #Folded or checked
