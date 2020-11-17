@@ -17,6 +17,11 @@ class Deck:
         self.cards = Deck.GetFullDeck()
         shuffle(self.cards)
 
+    def remove(self, cards):
+        for c in cards:
+            i = Card.new(Card.int_to_str(c))
+            self.cards.remove(i)
+
     def draw(self, n=1):
         if n == 1:
             return self.cards.pop(0)
