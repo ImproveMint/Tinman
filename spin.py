@@ -22,7 +22,7 @@ class Spin():
         self.blind_structure = blind_structure
         self.hands_per_level = hands_per_level
 
-        self.players = [randomplayer("Alice", self.starting_stack),
+        self.players = [mcplayer("Alice", self.starting_stack),
                         randomplayer("Bob", self.starting_stack),
                         randomplayer("Chris", self.starting_stack)]
 
@@ -41,7 +41,7 @@ class Spin():
         self.SMALL_BLIND = self.blind_structure[self.blind_level-1]//2
 
         self.num_hands = 0
-        self.game_state = ""
+        self.game_state = {}
 
         self.players_in_hand = 0
 
@@ -84,7 +84,6 @@ class Spin():
     housekeeping of the button and blinds
     '''
     def __prepare_new_hand(self):
-        self.game_state = ""
         self.street = Street.PREFLOP
         self.num_hands+=1
         self.players_in_hand = len(self.players)
@@ -108,6 +107,8 @@ class Spin():
         self.deck.shuffle()
         self.board.clear()
         self.board.append(self.deck.draw(5))
+
+        self.game_state["board"] = self.board
 
         #Deals 2 cards to each remaining player
         self.hands.clear()
@@ -150,9 +151,12 @@ class Spin():
         #everyone just calls the big blind doesn't get option to bet
 
         #There has to be more than 1 player that can act to continue
-        if self.__can_players_act() > 1:
+        can_act = self.__can_players_act()
+
+        if can_act > 1:
             actions = 0
             acting_player = self.pm.first_to_act(self.street)
+            self.game_state["remain"] = can_act
 
             while ((not self.__is_betting_completed()) or (actions < len(self.players))) and (self.players_in_hand > 1):
                 action, betsize = acting_player.get_action(self.game_state)
