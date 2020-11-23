@@ -1,13 +1,12 @@
 from card import Card
-from evaluator import Evaluator
 from constants import Street
+import eval_c
 
 class Player:
     street_max_committed = 0
     hand_max_committed = 0
     big_blind = 0
     min_raise = 0
-    evaluator = Evaluator()
 
     def __init__(self, name, stack):
         self.stack = stack
@@ -112,21 +111,21 @@ class Player:
             if self.hand_ranks[0] != -1:
                 rank = self.hand_ranks[0];
             else:
-                rank = Player.evaluator.evaluate(self.hand, board[:3])
+                rank = eval_c.evaluate5(board[:3], self.hand)
                 self.hand_ranks[0] = rank
 
         elif street == Street.TURN:
             if self.hand_ranks[1] != -1:
                 rank = self.hand_ranks[1];
             else:
-                rank = Player.evaluator.evaluate(self.hand, board[:4])
+                rank = eval_c.evaluate6(board[:4], self.hand)
                 self.hand_ranks[1] = rank
 
         else:
             if self.hand_ranks[2] != -1:
                 rank = self.hand_ranks[2];
             else:
-                rank = Player.evaluator.evaluate(self.hand, board)
+                rank = eval_c.evaluate7(board, self.hand)
                 self.hand_ranks[2] = rank
 
         return rank
