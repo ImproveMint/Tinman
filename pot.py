@@ -1,10 +1,9 @@
-from evaluator import Evaluator
 from card import Card
+from constants import Street
 
 class Pot():
     def __init__(self):
         self.main_pot = 0
-        self.eval = Evaluator()
 
     def add_to_pot(self, player, chips):
         assert(not player.folded)
@@ -59,7 +58,7 @@ class Pot():
         sorted_players = []
 
         for player in players:
-            sorted_ranks.append(self.eval.evaluate(player.get_hand(), board[0]))
+            sorted_ranks.append(player.get_hand_rank(board, Street.RIVER))# only calculate pots on river
 
         sorted_ranks, sorted_players = zip(*sorted(zip(sorted_ranks, players))) #Because of how I defined equivalence in player object it sorts it by committed when rank is =
 
