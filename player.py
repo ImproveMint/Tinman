@@ -1,4 +1,6 @@
 from card import Card
+from constants import Street
+import eval_c
 
 class Player:
     street_max_committed = 0
@@ -10,6 +12,7 @@ class Player:
         self.stack = stack
         self.name = name
         self.hand = []
+        self.hand_ranks = [-1, -1, -1] # hand ranks for flop, river and turn
         self.allin = False
         self.dead = False
         self.hand_committed = 0 #I realize I need 2 separate commit variables. for the street to calculate min raises and another for payouts
@@ -28,6 +31,7 @@ class Player:
     def __reset_player_state(self):
         self.folded = False
         self.allin = False
+        self.hand_ranks = [-1, -1, -1]
         self.__reset_hand_committed()
         self.reset_street_committed()
 
@@ -92,6 +96,39 @@ class Player:
         Player.big_blind = big_blind
         self.hand = hand
         self.__reset_player_state()
+
+    '''
+    Evaluating hands is one of the most expensive functions and so we want to
+    store and look up the value if we've already calculated it
+    '''
+    def get_hand_rank(self, board, street):
+
+        assert(street != Street.PREFLOP)
+
+        rank = -1;
+
+        if street == Street.FLOP:
+            if self.hand_ranks[0] != -1:
+                rank = self.hand_ranks[0];
+            else:
+                rank = eval_c.evaluate5(board[:3], self.hand)
+                self.hand_ranks[0] = rank
+
+        elif street == Street.TURN:
+            if self.hand_ranks[1] != -1:
+                rank = self.hand_ranks[1];
+            else:
+                rank = eval_c.evaluate6(board[:4], self.hand)
+                self.hand_ranks[1] = rank
+
+        else:
+            if self.hand_ranks[2] != -1:
+                rank = self.hand_ranks[2];
+            else:
+                rank = eval_c.evaluate7(board, self.hand)
+                self.hand_ranks[2] = rank
+
+        return rank
 
     def remove_from_committed(self, amount):
 

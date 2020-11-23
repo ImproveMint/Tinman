@@ -1,6 +1,5 @@
 from card import Card
 from deck import Deck
-from evaluator import Evaluator
 from pot import Pot
 import logging, sys
 from player import Player
@@ -30,9 +29,7 @@ class Spin():
 
         self.pot = Pot()
         self.deck = Deck()
-        self.evaluator = Evaluator()
         self.board = []
-        self.hands = []
 
         self.street = Street.PREFLOP
 
@@ -106,16 +103,13 @@ class Spin():
     def __deal_new_hand(self):
         self.deck.shuffle()
         self.board.clear()
-        self.board.append(self.deck.draw(5))
+        self.board = self.deck.draw(5)
 
         self.game_state["board"] = self.board
 
         #Deals 2 cards to each remaining player
-        self.hands.clear()
-
         for i, player in enumerate(self.players):
-            self.hands.append(self.deck.draw(2))
-            self.players[i].deal_new_hand(self.hands[i], self.BIG_BLIND)
+            self.players[i].deal_new_hand(self.deck.draw(2), self.BIG_BLIND)
 
     def __post_blinds(self):
         self.pot.add_to_pot(self.pm.get_small_blind(), self.SMALL_BLIND)
@@ -139,7 +133,7 @@ class Spin():
         elif self.street == Street.TURN:
             logging.debug(f"*** TURN ***")
         elif self.street == Street.RIVER:
-            logging.debug(f"*** RIVER *** {Card.print_pretty_cards(self.board[0])}")
+            logging.debug(f"*** RIVER *** {Card.print_pretty_cards(self.board)}")
 
         if logging.root.level == logging.DEBUG:
             for player in self.players:
