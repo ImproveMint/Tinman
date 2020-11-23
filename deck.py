@@ -18,9 +18,8 @@ class Deck:
         shuffle(self.cards)
 
     def remove(self, cards):
-        for c in cards:
-            i = Card.new(Card.int_to_str(c))
-            self.cards.remove(i)
+        for c in self.cards:
+            self.cards.remove(c)
 
     def draw(self, n=1):
         if n == 1:
