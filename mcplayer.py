@@ -5,9 +5,11 @@ from random import randrange
 
 from deck import Deck
 from card import Card
-from evaluator import Evaluator
 
 class mcplayer(Player):
+
+    deck = Deck()
+
     def get_action(self, gamestate):
         #Need some black box simulator for MC to generate search
 
@@ -74,45 +76,32 @@ class mcplayer(Player):
     we ignore all other information included future betting
     '''
     def __run_sim(self, sims, gamestate):
+        
         won = 0
-
-        hands = []
         ranks = []
-
-        deck = Deck()
-        evaluator = Evaluator()
+        best_rank = 7463
+        ranks.append(self.get_hand_rank(gamestate.get("board"), gamestate.get("street")))
 
         for sim in range(sims):
-            best_rank = 7463 # One worst than worst ranking hand
-            hands.append(self.get_hand())
 
             #Remove this player's hand and board cards from deck
-            deck.shuffle()
-            deck.remove(self.get_hand())
-            deck.remove(gamestate.get("board")[0])
+            mcplayer.deck.shuffle()
+            mcplayer.deck.remove(self.get_hand())
+            mcplayer.deck.remove(gamestate.get("board"))
 
             #Give remaining players in hand a random hand
-            for player in range(gamestate.get("remain")-1):
-                hands.append(deck.draw(2))
-
-            #Evaluate player's hands
-            for hand in hands:
-                ranks.append(evaluator.evaluate(hand, gamestate.get("board")[0]))
+            for _ in range(1, gamestate.get("remain")-1):
+                ranks.append(Player.evaluator.evaluate(mcplayer.deck.draw(2), gamestate.get("board")))
 
             #lowest ranked hand is the better hand
             #One thing that comes to mind is that split pot hands are considered wins
             best_rank = min(rank for rank in ranks)
-            '''
-            for rank in ranks:
-                if rank < best_rank:
-                    best_rank = rank
-            '''
 
-            # This MC player won
+            # This player won
             if ranks[0] == best_rank:
                 won+=1
 
-            hands.clear()
-            ranks.clear()
+            for _ in range(1, gamestate.get("remain")-1):
+                ranks.pop()
 
         return won
