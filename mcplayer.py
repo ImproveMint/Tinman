@@ -1,7 +1,9 @@
 from player import Player
 from randomplayer import randomplayer
-from constants import Action
+from constants import Action, Street
 from random import randrange
+import eval_c
+
 
 from deck import Deck
 from card import Card
@@ -72,36 +74,51 @@ class mcplayer(Player):
         '''
 
     '''
-    very trivial Monte Carlo, give other players 2 random cards and see who wins on river
+    trivial Monte Carlo, give other players 2 random cards and see who wins on river
     we ignore all other information included future betting
     '''
     def __run_sim(self, sims, gamestate):
-        
+
         won = 0
         ranks = []
-        best_rank = 7463
-        ranks.append(self.get_hand_rank(gamestate.get("board"), gamestate.get("street")))
+
+        street = gamestate.get("street")
+        board = gamestate.get("board")
+        remain = gamestate.get("remain") -1
+
+        remove_cards = []
+        remove_cards.extend(board)
+        remove_cards.extend(self.get_hand())
+
+        ranks.append(self.get_hand_rank(board, street))
 
         for sim in range(sims):
-
+            best_rank = 7463
+            winner = 0 # resets winning player to this player (index 0)
             #Remove this player's hand and board cards from deck
             mcplayer.deck.shuffle()
-            mcplayer.deck.remove(self.get_hand())
-            mcplayer.deck.remove(gamestate.get("board"))
+            mcplayer.deck.remove(remove_cards)
 
             #Give remaining players in hand a random hand
-            for _ in range(1, gamestate.get("remain")-1):
-                ranks.append(Player.evaluator.evaluate(mcplayer.deck.draw(2), gamestate.get("board")))
+            for _ in range(1, remain):
+                if street == Street.FLOP:
+                    ranks.append(eval_c.evaluate5(board, mcplayer.deck.draw(2)))
+
+                elif street == Street.TURN:
+                    ranks.append(eval_c.evaluate6(board, mcplayer.deck.draw(2)))
+
+                else:
+                    ranks.append(eval_c.evaluate7(board, mcplayer.deck.draw(2)))
 
             #lowest ranked hand is the better hand
-            #One thing that comes to mind is that split pot hands are considered wins
+            #One thing to note is that split pot hands are considered wins
             best_rank = min(rank for rank in ranks)
 
             # This player won
             if ranks[0] == best_rank:
                 won+=1
 
-            for _ in range(1, gamestate.get("remain")-1):
+            for _ in range(1, remain):
                 ranks.pop()
 
         return won
