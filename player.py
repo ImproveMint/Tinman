@@ -16,7 +16,7 @@ class Player:
         self.allin = False
         self.dead = False
         self.hand_committed = 0 #I realize I need 2 separate commit variables. for the street to calculate min raises and another for payouts
-        self.street_committed = 0 #Integer than keeps track of how much is committed on this street.
+        self.street_committed = 0 #Integer that keeps track of how much is committed on this street.
         self.folded = False
 
     def add_chips(self, chips):
