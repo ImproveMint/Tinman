@@ -31,8 +31,6 @@ class Spin():
         self.deck = Deck()
         self.board = []
 
-        self.street = Street.PREFLOP
-
         self.blind_level = 1 #Uses 1 indexing not 0 indexing
         self.BIG_BLIND = self.blind_structure[self.blind_level-1]
         self.SMALL_BLIND = self.blind_structure[self.blind_level-1]//2
@@ -81,7 +79,7 @@ class Spin():
     housekeeping of the button and blinds
     '''
     def __prepare_new_hand(self):
-        self.street = Street.PREFLOP
+        self.game_state["street"] = Street.PREFLOP
         self.num_hands+=1
         self.players_in_hand = len(self.players)
 
@@ -126,13 +124,13 @@ class Spin():
 
     def __betting_round(self):
 
-        if self.street == Street.PREFLOP:
+        if self.game_state["street"] == Street.PREFLOP:
             logging.debug(f"*** HOLE CARDS ***")
-        elif self.street == Street.FLOP:
+        elif self.game_state["street"] == Street.FLOP:
             logging.debug(f"*** FLOP ***")
-        elif self.street == Street.TURN:
+        elif self.game_state["street"] == Street.TURN:
             logging.debug(f"*** TURN ***")
-        elif self.street == Street.RIVER:
+        elif self.game_state["street"] == Street.RIVER:
             logging.debug(f"*** RIVER *** {Card.print_pretty_cards(self.board)}")
 
         if logging.root.level == logging.DEBUG:
@@ -149,7 +147,7 @@ class Spin():
 
         if can_act > 1:
             actions = 0
-            acting_player = self.pm.first_to_act(self.street)
+            acting_player = self.pm.first_to_act(self.game_state["street"])
             self.game_state["remain"] = can_act
 
             while ((not self.__is_betting_completed()) or (actions < len(self.players))) and (self.players_in_hand > 1):
@@ -193,7 +191,7 @@ class Spin():
         return act_count
 
     def __next_street(self):
-        self.street = (self.street +1)
+        self.game_state["street"] = (Street(self.game_state["street"] +1))
 
     def __process_action(self, player, action, bet_size = 0):
         #Folded or checked
